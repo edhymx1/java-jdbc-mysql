@@ -10,14 +10,14 @@ import java.util.List;
 
 public class ProductoRepositorioImpl implements Repositorio<Producto> {
     private Connection getConnection() throws SQLException {
-        return ConexionBaseDatos.getInstance();
+        return ConexionBaseDatos.getConnection();
     }
 
     @Override
     public List<Producto> listar() {
         List<Producto> productos = new ArrayList<>();
 
-        try (Statement statement = getConnection().createStatement()) {
+        try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
             String sql = "SELECT p.*, c.nombre as categoria FROM productos p JOIN categorias c ON p.categoria_id = c.id";
             try (ResultSet result = statement.executeQuery(sql)) {
                 while (result.next()) {
@@ -36,7 +36,7 @@ public class ProductoRepositorioImpl implements Repositorio<Producto> {
     public Producto buscarPorId(Long id) {
         Producto producto = null;
         String sql = "SELECT p.*, c.nombre as categoria FROM productos p JOIN categorias c ON p.categoria_id = c.id WHERE p.id = ?";
-        try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setLong(1, id);
             try (ResultSet rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -57,7 +57,7 @@ public class ProductoRepositorioImpl implements Repositorio<Producto> {
         } else {
             sql = "INSERT INTO productos(nombre, precio, categoria_id, fecha_registro) VALUES(?,?,?,?)";
         }
-        try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, producto.getNombre());
             statement.setInt(2, producto.getPrecio());
             statement.setLong(3, producto.getCategoria().getId());
@@ -77,7 +77,7 @@ public class ProductoRepositorioImpl implements Repositorio<Producto> {
 
     @Override
     public void eliminar(Long id) {
-        try (PreparedStatement statement = getConnection().prepareStatement("DELETE FROM productos WHERE id = ?")) {
+        try (Connection connection = getConnection(); PreparedStatement statement = connection.prepareStatement("DELETE FROM productos WHERE id = ?")) {
             statement.setLong(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
